@@ -11,6 +11,7 @@ import (
 	"github.com/buildbuddy-io/buildbuddy/server/util/grpc_client"
 	"github.com/buildbuddy-io/buildbuddy/server/util/log"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	pepb "github.com/buildbuddy-io/buildbuddy/proto/publish_build_event"
@@ -78,13 +79,13 @@ func (c *BuildEventProxyClient) PublishLifecycleEvent(_ context.Context, req *pe
 type asyncStreamProxy struct {
 	pepb.PublishBuildEvent_PublishBuildToolEventStreamClient
 	ctx    context.Context
-	events chan pepb.PublishBuildToolEventStreamRequest
+	events chan []byte // pepb.PublishBuildToolEventStreamRequest
 }
 
 func (c *BuildEventProxyClient) newAsyncStreamProxy(ctx context.Context, opts ...grpc.CallOption) *asyncStreamProxy {
 	asp := &asyncStreamProxy{
 		ctx:    ctx,
-		events: make(chan pepb.PublishBuildToolEventStreamRequest, *bufferSize),
+		events: make(chan []byte, *bufferSize),
 	}
 	// Start a goroutine that will open the stream and pass along events.
 	go func() {
@@ -114,11 +115,16 @@ func (c *BuildEventProxyClient) newAsyncStreamProxy(ctx context.Context, opts ..
 		// copies of protos are not permitted, so rather than range over the
 		// channel we read from the channel inside of an outer loop.
 		for {
-			req, ok := <-asp.events
+			reqBytes, ok := <-asp.events
 			if !ok {
 				break
 			}
-			err := stream.Send(&req)
+			req := pepb.PublishBuildToolEventStreamRequest{}
+			err := proto.Unmarshal(reqBytes, &req)
+			if err != nil {
+				log.Warningf("Error unmarshaling req: %s", err.Error())
+			}
+			err = stream.Send(&req)
 			if err != nil {
 				log.Warningf("Error sending req on stream: %s", err.Error())
 				break
@@ -130,8 +136,12 @@ func (c *BuildEventProxyClient) newAsyncStreamProxy(ctx context.Context, opts ..
 }
 
 func (asp *asyncStreamProxy) Send(req *pepb.PublishBuildToolEventStreamRequest) error {
+	bytesReq, err := proto.Marshal(req)
+	if err != nil {
+		return err
+	}
 	select {
-	case asp.events <- *req:
+	case asp.events <- bytesReq:
 		// does not fallthrough.
 	default:
 		log.Warningf("BuildEventProxy dropped message.")

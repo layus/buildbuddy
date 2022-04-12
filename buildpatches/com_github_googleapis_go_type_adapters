@@ -1,0 +1,60 @@
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ adapters/BUILD.bazel	1970-01-01 00:00:00.000000000 +0000
+@@ -0,0 +1,57 @@
++load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
++
++go_library(
++    name = "adapters",
++    srcs = [
++        "color.go",
++        "date.go",
++        "datetime.go",
++        "decimal.go",
++        "doc.go",
++        "fraction.go",
++        "month.go",
++    ],
++    importpath = "github.com/googleapis/go-type-adapters/adapters",
++    visibility = ["//visibility:public"],
++    deps = [
++        "@go_googleapis//google/type:color_go_proto",
++        "@go_googleapis//google/type:date_go_proto",
++        "@go_googleapis//google/type:datetime_go_proto",
++        "@go_googleapis//google/type:decimal_go_proto",
++        "@go_googleapis//google/type:fraction_go_proto",
++        "@go_googleapis//google/type:month_go_proto",
++        "@org_golang_google_protobuf//types/known/durationpb:go_default_library",
++        "@org_golang_google_protobuf//types/known/wrapperspb:go_default_library",
++    ],
++)
++
++alias(
++    name = "go_default_library",
++    actual = ":adapters",
++    visibility = ["//visibility:public"],
++)
++
++go_test(
++    name = "adapters_test",
++    srcs = [
++        "color_test.go",
++        "date_test.go",
++        "datetime_test.go",
++        "decimal_test.go",
++        "fraction_test.go",
++        "internal_test.go",
++        "month_test.go",
++    ],
++    embed = [":adapters"],
++    deps = [
++        "@go_googleapis//google/type:color_go_proto",
++        "@go_googleapis//google/type:date_go_proto",
++        "@go_googleapis//google/type:datetime_go_proto",
++        "@go_googleapis//google/type:decimal_go_proto",
++        "@go_googleapis//google/type:fraction_go_proto",
++        "@go_googleapis//google/type:month_go_proto",
++        "@io_bazel_rules_go//proto/wkt:wrappers_go_proto",
++        "@org_golang_google_protobuf//types/known/durationpb:go_default_library",
++    ],
++)
++
