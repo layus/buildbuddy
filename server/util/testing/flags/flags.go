@@ -7,31 +7,29 @@ import (
 	"testing"
 
 	"github.com/buildbuddy-io/buildbuddy/server/config"
+	"github.com/buildbuddy-io/buildbuddy/server/util/flagutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 // Set a flag value and register a cleanup function to restore the flag
 // to its original value after the given test is complete.
-func Set(t testing.TB, name, value string) {
-	config.RegisterAndParseFlags()
-	f := flag.Lookup(name)
-	if f == nil {
-		t.Fatalf("Undefined flag: %s", name)
-	}
-	original := f.Value.String()
-	flag.Set(name, value)
-	wasSet := config.TestOnlySetFlag(name, true)
+func Set(t testing.TB, name string, value interface{}) {
+	origValue, err := flagutil.DereferencedValueFromFlagName(name)
+	require.NoError(t, err)
+	err = flagutil.SetValueForFlagName(name, value, nil, false, true)
+	require.NoError(t, err)
+
 	t.Cleanup(func() {
-		flag.Set(name, original)
-		config.TestOnlySetFlag(name, wasSet)
+		err = flagutil.SetValueForFlagName(name, origValue, nil, false, true)
+		require.NoError(t, err)
 	})
 }
 
 // CheckFlagsAgainstConfig checks that all defined flags containing a `.` are
 // present in the config struct.
 func CheckFlagsAgainstConfig(t *testing.T) {
-	configurator, err := config.NewConfiguratorFromData([]byte{})
+	configurator, err := config.PopulateFlagsFromData([]byte{})
 	require.NoError(t, err)
 	yamlFlagSet := configurator.GenerateFlagSet()
 	flag.VisitAll(func(flg *flag.Flag) {

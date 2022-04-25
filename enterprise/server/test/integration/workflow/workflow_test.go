@@ -69,7 +69,7 @@ func setup(t *testing.T, gp interfaces.GitProvider) (*rbetest.Env, interfaces.Wo
 	// typically use far less RAM. To enable this test to run on machines smaller
 	// than 8Gi, force-set the executor memory_bytes to 10Gi so the workflow
 	// tasks will schedule.
-	flags.Set(t, "executor.memory_bytes", fmt.Sprintf("%d", 10_000_000_000))
+	flags.Set(t, "executor.memory_bytes", 10_000_000_000)
 	// Use bare execution -- Docker isn't supported in tests yet.
 	flags.Set(t, "remote_execution.workflows_default_image", "none")
 	// Use a pre-built bazel instead of invoking bazelisk, which significantly

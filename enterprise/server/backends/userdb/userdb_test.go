@@ -47,8 +47,8 @@ func findGroupUser(t *testing.T, userID string, groupUsers []*grpb.GetGroupUsers
 }
 
 func TestGetImpersonatedUser_UserWithoutImpersonationPerms_PermissionDenied(t *testing.T) {
-	flags.Set(t, "app.create_group_per_user", "true")
-	flags.Set(t, "app.no_default_user_group", "true")
+	flags.Set(t, "app.create_group_per_user", true)
+	flags.Set(t, "app.no_default_user_group", true)
 	env := newTestEnv(t)
 	udb := env.GetUserDB()
 	ctx := context.Background()
@@ -75,8 +75,8 @@ func TestGetImpersonatedUser_UserWithoutImpersonationPerms_PermissionDenied(t *t
 }
 
 func TestCreateUser_Cloud_CreatesSelfOwnedGroup(t *testing.T) {
-	flags.Set(t, "app.create_group_per_user", "true")
-	flags.Set(t, "app.no_default_user_group", "true")
+	flags.Set(t, "app.create_group_per_user", true)
+	flags.Set(t, "app.no_default_user_group", true)
 	env := newTestEnv(t)
 	udb := env.GetUserDB()
 	ctx := context.Background()
@@ -110,8 +110,8 @@ func TestCreateUser_Cloud_CreatesSelfOwnedGroup(t *testing.T) {
 }
 
 func TestCreateUser_OnPrem_OnlyFirstUserCreatedShouldBeMadeAdminOfDefaultGroup(t *testing.T) {
-	flags.Set(t, "app.create_group_per_user", "false")
-	flags.Set(t, "app.no_default_user_group", "false")
+	flags.Set(t, "app.create_group_per_user", false)
+	flags.Set(t, "app.no_default_user_group", false)
 	env := newTestEnv(t)
 	udb := env.GetUserDB()
 	ctx := context.Background()
@@ -151,8 +151,8 @@ func TestCreateUser_OnPrem_OnlyFirstUserCreatedShouldBeMadeAdminOfDefaultGroup(t
 }
 
 func TestAddUserToGroup_AddsUserWithDefaultRole(t *testing.T) {
-	flags.Set(t, "app.create_group_per_user", "true")
-	flags.Set(t, "app.no_default_user_group", "true")
+	flags.Set(t, "app.create_group_per_user", true)
+	flags.Set(t, "app.no_default_user_group", true)
 	env := newTestEnv(t)
 	udb := env.GetUserDB()
 	ctx := context.Background()
@@ -195,8 +195,8 @@ func TestAddUserToGroup_AddsUserWithDefaultRole(t *testing.T) {
 }
 
 func TestAddUserToGroup_EmptyGroup_UserGetsAdminRole(t *testing.T) {
-	flags.Set(t, "app.create_group_per_user", "true")
-	flags.Set(t, "app.no_default_user_group", "true")
+	flags.Set(t, "app.create_group_per_user", true)
+	flags.Set(t, "app.no_default_user_group", true)
 	env := newTestEnv(t)
 	udb := env.GetUserDB()
 	ctx := context.Background()
@@ -230,8 +230,8 @@ func TestAddUserToGroup_EmptyGroup_UserGetsAdminRole(t *testing.T) {
 }
 
 func TestUpdateGroupUsers_Role(t *testing.T) {
-	flags.Set(t, "app.create_group_per_user", "true")
-	flags.Set(t, "app.no_default_user_group", "true")
+	flags.Set(t, "app.create_group_per_user", true)
+	flags.Set(t, "app.no_default_user_group", true)
 	env := newTestEnv(t)
 	udb := env.GetUserDB()
 	ctx := context.Background()

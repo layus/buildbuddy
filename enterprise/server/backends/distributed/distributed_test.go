@@ -34,7 +34,7 @@ var (
 )
 
 func getEnvAuthAndCtx(t *testing.T) (*testenv.TestEnv, *testauth.TestAuthenticator, context.Context) {
-	flags.Set(t, "auth.enable_anonymous_usage", "true")
+	flags.Set(t, "auth.enable_anonymous_usage", true)
 	te := testenv.GetTestEnv(t)
 	ta := testauth.NewTestAuthenticator(userMap)
 	te.SetAuthenticator(ta)
