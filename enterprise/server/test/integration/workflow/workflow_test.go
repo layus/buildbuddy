@@ -79,8 +79,6 @@ func setup(t *testing.T, gp interfaces.GitProvider) (*rbetest.Env, interfaces.Wo
 	// propagated to the CI runner so it knows where to publish build events).
 	flags.Set(t, "app.events_api_url", fmt.Sprintf("grpc://localhost:%d", bbServer.GRPCPort()))
 
-	env.GetConfigurator().ReconcileFlagsAndConfig()
-
 	env.AddExecutors(t, 10)
 	return env, workflowService
 }

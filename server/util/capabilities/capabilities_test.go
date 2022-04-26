@@ -62,7 +62,6 @@ func TestFromInt_MultipleCapabilities(t *testing.T) {
 func TestIsGranted_AnonymousUsageEnabled_AnonymousUser_True(t *testing.T) {
 	te := getTestEnv(t, emptyUserMap)
 	anonCtx := context.Background()
-	te.GetConfigurator().ReconcileFlagsAndConfig()
 
 	canWrite, err := capabilities.IsGranted(anonCtx, te, akpb.ApiKey_CACHE_WRITE_CAPABILITY)
 

@@ -7,7 +7,6 @@ import (
 	"math/rand"
 	"os"
 	"path"
-	"strconv"
 	"sync"
 	"testing"
 	"time"

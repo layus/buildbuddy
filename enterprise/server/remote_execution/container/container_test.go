@@ -2,7 +2,6 @@ package container_test
 
 import (
 	"context"
-	"encoding/json"
 	"io"
 	"testing"
 	"time"
