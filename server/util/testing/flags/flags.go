@@ -16,8 +16,7 @@ func PopulateFlagsFromData(t testing.TB, testConfigData []byte) {
 	populateFlagsOnce.Do(func() {
 		// add placeholder type for type adding by testing
 		flagutil.AddTestFlagTypeForTesting(flag.Lookup("test.benchtime").Value, struct{}{})
-		c, err := config.NewConfiguratorFromData(testConfigData)
-		c.ReconcileFlagsAndConfig()
+		err := config.PopulateFlagsFromData(testConfigData)
 		require.NoError(t, err)
 	})
 }
