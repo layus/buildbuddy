@@ -15,7 +15,6 @@ func init() {
 	flag.Parse()
 }
 
-
 func envWithAppURL(t *testing.T, appUrl string) environment.Env {
 	flags.Set(t, "app.build_buddy_url", appUrl)
 	healthChecker := healthcheck.NewHealthChecker("test")
