@@ -197,7 +197,7 @@ func initializeDiskCache(env *real_environment.RealEnv) {
 	if *cacheMaxSizeBytes != 0 {
 		maxSizeBytes = *cacheMaxSizeBytes
 	}
-	c, err := disk_cache.NewDiskCache(env, &config.DiskConfig{RootDirectory: *cacheDir}, maxSizeBytes)
+	c, err := disk_cache.NewDiskCache(env, &disk_cache.Options{RootDirectory: *cacheDir}, maxSizeBytes)
 	if err != nil {
 		log.Fatalf("Error configuring cache: %s", err)
 	}
