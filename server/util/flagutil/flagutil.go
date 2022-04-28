@@ -4,14 +4,16 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"log"
 	"net/url"
+	"os"
 	"reflect"
 	"strings"
 	"time"
 
 	"github.com/buildbuddy-io/buildbuddy/server/util/alert"
+	"github.com/buildbuddy-io/buildbuddy/server/util/log"
 	"github.com/buildbuddy-io/buildbuddy/server/util/status"
+	"gopkg.in/yaml.v2"
 )
 
 var (
@@ -32,6 +34,10 @@ var (
 		reflect.TypeOf((*stringSliceFlag)(nil)): reflect.TypeOf((*[]string)(nil)),
 		reflect.TypeOf((*URLFlag)(nil)):         reflect.TypeOf((*URLFlag)(nil)),
 	}
+
+	// Flag names to ignore when generating a YAML map or populating flags (e. g.,
+	// the flag specifying the path to the config file)
+	ignoreSet = make(map[string]struct{})
 )
 
 func flagTypeFromFlagFuncName(name string) reflect.Type {
@@ -269,6 +275,12 @@ func (f *URLFlag) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return err
 }
 
+// Ignore the flag with this name when generating YAML and when populating flags
+// from YAML input.
+func IgnoreFlag(name string) {
+	ignoreSet[name] = struct{}{}
+}
+
 // Generates a map to be populated by YAML that contains a zero-value of
 // the appropriate type at each index with a corresponding flag name.
 func GenerateYAMLMapFromFlags() (map[interface{}]interface{}, error) {
@@ -276,6 +288,11 @@ func GenerateYAMLMapFromFlags() (map[interface{}]interface{}, error) {
 	var errors []error
 	defaultFlagSet.VisitAll(func(flg *flag.Flag) {
 		keys := strings.Split(flg.Name, ".")
+		for i := range keys {
+			if _, ok := ignoreSet[strings.Join(keys[:i+1], ".")]; ok {
+				return
+			}
+		}
 		m := yamlMap
 		for i, k := range keys[:len(keys)-1] {
 			v, ok := m[k]
@@ -322,6 +339,47 @@ func PopulateFlagsFromYAMLMap(m map[interface{}]interface{}) error {
 	return populateFlagsFromYAML(m, []string{}, setFlags)
 }
 
+func PopulateFlagsFromData(data []byte) error {
+	// expand environment variables
+	expandedData := []byte(os.ExpandEnv(string(data)))
+
+	strictMap, err := GenerateYAMLMapFromFlags()
+	if err != nil {
+		return err
+	}
+
+	// Unmarshal in strict mode once and warn about invalid fields.
+	if err := yaml.UnmarshalStrict([]byte(expandedData), strictMap); err != nil {
+		log.Warningf("Unknown fields in config: %s", err)
+	}
+
+	permissiveMap := make(map[interface{}]interface{})
+	if err := yaml.Unmarshal([]byte(expandedData), permissiveMap); err != nil {
+		return fmt.Errorf("Error parsing config file: %s", err)
+	}
+
+	return PopulateFlagsFromYAMLMap(permissiveMap)
+}
+
+func PopulateFlagsFromFile(configFile string) error {
+	log.Infof("Reading buildbuddy config from '%s'", configFile)
+
+	_, err := os.Stat(configFile)
+
+	// If the file does not exist then skip it.
+	if os.IsNotExist(err) {
+		log.Warningf("No config file found at %s.", configFile)
+		return nil
+	}
+
+	fileBytes, err := os.ReadFile(configFile)
+	if err != nil {
+		return fmt.Errorf("Error reading config file: %s", err)
+	}
+
+	return PopulateFlagsFromData(fileBytes)
+}
+
 func populateFlagsFromYAML(i interface{}, prefix []string, setFlags map[string]struct{}) error {
 	if m, ok := i.(map[interface{}]interface{}); ok {
 		for k, v := range m {
@@ -329,13 +387,21 @@ func populateFlagsFromYAML(i interface{}, prefix []string, setFlags map[string]s
 			if !ok {
 				return fmt.Errorf("non-string key in YAML map at %s.", strings.Join(prefix, "."))
 			}
-			if err := populateFlagsFromYAML(v, append(prefix, suffix), setFlags); err != nil {
+			p := append(prefix, suffix)
+			if _, ok := ignoreSet[strings.Join(p, ".")]; ok {
+				return nil
+			}
+			if err := populateFlagsFromYAML(v, p, setFlags); err != nil {
 				return err
 			}
 		}
 		return nil
 	}
-	return SetValueForFlagName(strings.Join(prefix, "."), i, setFlags, true, false)
+	name := strings.Join(prefix, ".")
+	if _, ok := ignoreSet[name]; ok {
+		return nil
+	}
+	return SetValueForFlagName(name, i, setFlags, true, false)
 }
 
 // Sets the value for a flag by name

@@ -5,7 +5,6 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/buildbuddy-io/buildbuddy/server/config"
 	"github.com/buildbuddy-io/buildbuddy/server/util/flagutil"
 	"github.com/stretchr/testify/require"
 )
@@ -16,7 +15,7 @@ func PopulateFlagsFromData(t testing.TB, testConfigData []byte) {
 	populateFlagsOnce.Do(func() {
 		// add placeholder type for type adding by testing
 		flagutil.AddTestFlagTypeForTesting(flag.Lookup("test.benchtime").Value, struct{}{})
-		err := config.PopulateFlagsFromData(testConfigData)
+		err := flagutil.PopulateFlagsFromData(testConfigData)
 		require.NoError(t, err)
 	})
 }

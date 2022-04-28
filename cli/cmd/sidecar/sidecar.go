@@ -14,9 +14,9 @@ import (
 	"github.com/buildbuddy-io/buildbuddy/server/backends/disk_cache"
 	"github.com/buildbuddy-io/buildbuddy/server/build_event_protocol/build_event_proxy"
 	"github.com/buildbuddy-io/buildbuddy/server/build_event_protocol/build_event_server"
-	"github.com/buildbuddy-io/buildbuddy/server/config"
 	"github.com/buildbuddy-io/buildbuddy/server/nullauth"
 	"github.com/buildbuddy-io/buildbuddy/server/real_environment"
+	"github.com/buildbuddy-io/buildbuddy/server/util/flagutil"
 	"github.com/buildbuddy-io/buildbuddy/server/util/grpc_client"
 	"github.com/buildbuddy-io/buildbuddy/server/util/grpc_server"
 	"github.com/buildbuddy-io/buildbuddy/server/util/healthcheck"
@@ -208,7 +208,7 @@ func main() {
 	// Can remove all this configurator stuff once all flags the sidecar uses are
 	// defined outside the configurator.
 	flag.Parse()
-	if err := config.PopulateFlagsFromData([]byte{}); err != nil {
+	if err := flagutil.PopulateFlagsFromData([]byte{}); err != nil {
 		log.Fatalf("Error initializing Configurator: %s", err.Error())
 	}
 	ctx, cancel := context.WithCancel(context.Background())
