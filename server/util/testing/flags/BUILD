@@ -9,8 +9,6 @@ go_library(
     deps = [
         "//server/config",
         "//server/util/flagutil",
-        "//server/util/log",
-        "//server/util/status",
         "@com_github_stretchr_testify//require",
     ],
 )
